@@ -37,7 +37,7 @@ Mount the root volume to /mnt
 
 For UEFI systems, mount the EFI system partition
 
-<code>mount --mkdir /dev/efi_system_partition /mnt/boot</code>
+<code>mount --mkdir /dev/efi_system_partition /mnt/boot/efi</code>
 
 
 for swap
