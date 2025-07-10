@@ -175,7 +175,7 @@ The tool will guide you through:
 
 ## Windows Detection in GRUB
 
-If you have Windows installed and want to dual boot with Arch Linux, follow these steps to ensure Windows appears in your GRUB menu:
+If you have Windows installed and want to dual boot with Arch Linux, follow these steps to ensure Windows appears in your GRUB menu (make sure your in chroot):
 
 ### Install Required Packages
 
