@@ -1,172 +1,224 @@
-# Linux-Manual
-This is a basic repo form myself about the installation ,using and building of my arch linux
+# Linux Manual - Arch Linux Installation Guide
 
-iso file download link :https://archlinux.org/download
+This repository contains resources and instructions for installing and configuring Arch Linux, with both manual and automatic installation options.
 
-The code used to check the version of the linux iso:
+## Table of Contents
 
-<code>$ pacman-key -v archlinux-version-x86_64.iso.sig</code>
+- [Common Preparation](#common-preparation)
+  - [1. Getting Started](#1-getting-started)
+  - [2. Disk Partitioning](#2-disk-partitioning)
+  - [3. Format and Mount Partitions](#3-format-and-mount-partitions)
+- [Installation Options](#installation-options)
+  - [Manual Installation](#manual-installation)
+  - [Automatic Installation](#automatic-installation)
+- [Windows Detection in GRUB](#windows-detection-in-grub)
 
-partition the drive(ssd,usb etc)
+## Common Preparation
 
-for finding the list of the drive use:
-<code>lsblk</code>
+### 1. Getting Started
 
-The partition should have three partition (boot,swap and the main os)
+#### 1.1. Download ISO
 
+Download the latest Arch Linux ISO from the [official website](https://archlinux.org/download/).
 
-/boot - /dev/efi -efi system partition -1gb (fat32)
+#### 1.2. Create Bootable USB
 
-[swap] -/dev/swap -linux swap- 4gb (swap)
+Create a bootable USB drive using tools like `dd`, Rufus, Ventoy, or Etcher
 
-/ root -/dev/root -linux root - 32gb (ext4)
+#### 1.3. Boot from USB
 
-The code for partition is:
+- Restart your computer and boot from the USB
+- When the boot menu appears, select "Arch Linux install medium" and press Enter
 
-<code>mkswap /dev/(swap_partition)</code>
+#### 1.4. Verify Internet Connection
 
-<code>mkfs.fat -F 32 /dev/(efi_partition)</code>
+Once booted into the live environment:
 
-<code>mkfs.ext4 /dev/(root_partition)</code>
+```bash
+# Verify network connection
+ping -c 3 archlinux.org
 
-mounting the partition
+# If using WiFi, connect using iwctl
+iwctl
+[iwd]# device list
+[iwd]# station wlan0 scan
+[iwd]# station wlan0 get-networks
+[iwd]# station wlan0 connect SSID
+[iwd]# exit
+```
 
-Mount the root volume to /mnt
+### 2. Disk Partitioning
 
-<code>mount /dev/root_partition /mnt</code>
+#### 2.1. Identify Your Disk
 
-For UEFI systems, mount the EFI system partition
+```bash
+lsblk
+```
 
-<code>mount --mkdir /dev/efi_system_partition /mnt/boot/efi</code>
+#### 2.2. Partition the Disk
 
+```bash
+# Start fdisk for your disk (replace sdX)
+fdisk /dev/sdX
+```
 
-for swap
+Create the following partitions:
+- EFI System Partition (ESP): 200-500MB (type: EFI System) [do not need to create if window is there and want to use the same EFI partition]
+- Swap partition: any size (type: Linux swap)
+- Root partition: Remainder (type: Linux filesystem)
 
-<code>swapon /dev/swap_partition</code>
+### 3. Format and Mount Partitions
 
+```bash
+# Format EFI partition (skip if window is there)
+mkfs.fat -F32 /dev/sdX1
 
-Then do the installation
+# Create and activate swap
+mkswap /dev/sdX2
+swapon /dev/sdX2
 
-we install mirrors 
+# Format root partition
+mkfs.ext4 /dev/sdX3
 
-do the code in order
+# Mount partitions
+mount /dev/sdX3 /mnt
+mkdir -p /mnt/boot/efi
+mount /dev/sdX1 /mnt/boot/efi
+```
 
-to install base packages and git if needed
+## Installation Options
 
-<code>pacstrap -K /mnt base linux linux-firmware neovim nano</code>
+After completing the common preparation steps above, you can choose either the manual or automatic installation method.
 
-to make usure the file are there on bootup
+### Manual Installation
 
-<code>genfstab -U /mnt > /mnt/etc/fstab</code>
+#### 1. Install Essential Packages
 
-changing root
+```bash
+pacstrap /mnt base linux linux-firmware base-devel
+```
 
-<code> arch-chroot /mnt</code>
+#### 2. Install Additional Useful Packages
 
-open the arch_start.sh on nvim and update the hostname ,username, disk, grub install and save the file
+```bash
+pacstrap /mnt vim nano git os-prober
+```
 
-run the arch_start.sh using
+#### 3. Generate fstab
 
-<code> bash filename </code>
+```bash
+genfstab -U /mnt >> /mnt/etc/fstab
+```
 
-if issuse with wifi or ethernet install network manager 
+#### 4. Chroot into the New System
 
-<code> sudo pacman -S networkmanager</code>
+```bash
+arch-chroot /mnt
+```
 
-after that enable the network manager
+#### 5. Clone and Run the Installation Script
 
-<code>sudo systemctl enable NetworkManager</code>
+```bash
+# Install git if not already installed
+pacman -S git
 
-<code>sudo systemctl start NetworkManager</code>
+# Clone this repository
+git clone https://github.com/TheLostLeo/Linux-Manual.git
 
-the default shell is bash and it can be changed to other shells like fish or zsh
+# Navigate to the repository
+cd Linux-Manual
 
-(for my system it is zsh)
+# Make the script executable
+chmod +x install.sh
 
-run command to install zsh
+# Run the installation script
+./install.sh
+```
 
-<code>sudo pacman -S zsh</code>
+#### 6. Install and Configure GRUB
 
-this install the zsh into the system
+```bash
+# Install GRUB
+grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB
 
-then run the below code to change the shell from bash to zsh
+# Generate GRUB configuration
+grub-mkconfig -o /boot/grub/grub.cfg
+```
 
-<code>chsh -s /bin/zsh</code>
+### Automatic Installation
 
-now do the oh-my-zsh
+The Arch Linux ISO includes a guided installation tool called `archinstall` that automates many installation steps.
 
-<code>sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"</code>
+#### 1. Start the Archinstall Tool
 
-now to install xorh for the window manager
+```bash
+pacman -S archinstall archlinux-keyring
+archinstall
+```
 
-first update you system
+#### 2. Follow the Interactive Prompts
 
-<code>sudo pacman -Syu</code>
+The tool will guide you through:
+- Selecting keyboard layout
+- Selecting mirror region
+- Disk partitioning and formatting
+- Selecting desktop environment (if desired)
+- Setting username and password
+- Additional packages to install
 
-now install the xorg and the depended packages
+#### 3. Apply Configuration and Install
 
-<code>sudo pacman -S xorg-server xorg-xinit xorg-xrandr</code>
+- Review your selections
+- Confirm to begin installation
+- Wait for installation to complete
+- Reboot when prompted
 
-install driver input
+## Windows Detection in GRUB
 
-<code>sudo pacman -S xf86-input-libinput</code>
+If you have Windows installed and want to dual boot with Arch Linux, follow these steps to ensure Windows appears in your GRUB menu:
 
-install a video drive according to your cpu or gpu
+### Install Required Packages
 
-install the all the thing need for the os (window manger,status bar,terminal etc)
+```bash
+sudo pacman -S os-prober 
+```
 
-<code>sudo pacman -S bspwm picom rofi polybar dunst sxhkd thunar alacritty nitrogen</code>
+### Enable OS Prober in GRUB
 
-now cd to .config folder
+1. Edit the GRUB configuration:
+   ```bash
+   sudo nano /etc/default/grub
+   ```
 
-and do the following
+2. Add or uncomment this line:
+   ```
+   GRUB_DISABLE_OS_PROBER=false
+   ```
 
-<code>mkdir bspwm sxhkd picom polybar dunst</code>
+3. Save and exit the editor
 
-<code>cp /usr/share/doc/bspwm/examples/bspwmrc ~/.config/bspwm/bspwmrc</code>
+### Mount Windows Partition (if necessary)
 
-<code>cp /usr/share/doc/bspwm/examples/sxhdrc ~/.config/sxhkd/sxhkdrc</code>
+only If Windows EFI is installed on a separate drive or partition:
 
-<code>cp /etc/xdg/picom.config picom/</code>
+```bash
+# Create a mount point
+sudo mkdir -p /mnt/windows
 
-<code>cp /etc/polybar/config.ini polybar</code>
+# List all partitions to find Windows
+lsblk -f
 
-<code>cp /etc/dunst/dunstrc dunst</code>
+# Mount the Windows partition (replace sdXY with your Windows partition)
+sudo mount /dev/sdXY /mnt/windows
+```
 
-cd to bspwm and chmod to make the bspwmrc excutable
+### Update GRUB Configuration
 
-<code>chmod +x bspwmrc</code>
+```bash
+sudo grub-mkconfig -o /boot/grub/grub.cfg
+```
 
-nvim the bspwmrc file and these line for auto start
-
-#autostart
-
-sxhkd &
-
-picom --config $HOME/.config/picom/picom.conf &
-
-nitrogen --restore &
-
-dunst &
-
-polybar &
-
-and save the changes
-
-open sxhkdrc in the config/sxhkd and enter the keyblinds need
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+You should see output like:
+```
+Found Windows Boot Manager on /dev/sdXY
+```
