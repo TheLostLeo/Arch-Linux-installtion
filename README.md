@@ -123,10 +123,10 @@ arch-chroot /mnt
 pacman -S git
 
 # Clone this repository
-git clone https://github.com/TheLostLeo/Linux-Manual.git
+git clone https://github.com/TheLostLeo/Arch-Linux-installtion.git
 
 # Navigate to the repository
-cd Linux-Manual
+cd Arch-Linux-installtion
 
 # Make the script executable
 chmod +x install.sh
