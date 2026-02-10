@@ -197,6 +197,29 @@ sudo pacman -S os-prober
 
 3. Save and exit the editor
 
+### Add Sudo Configuration (Required)
+
+Enable sudo for wheel group (inside chroot)
+```
+# Install sudo if not already installed
+pacman -S sudo
+
+# Enable sudo access for wheel group
+sed -i 's/^# %wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/' /etc/sudoers
+
+Verify (optional but recommended)
+# Switch to your user
+su - username
+
+# Test sudo
+sudo whoami
+```
+
+Expected output:
+```
+root
+```
+
 ### Mount Windows Partition (if necessary)
 
 only If Windows EFI is installed on a separate drive or partition:
