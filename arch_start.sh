@@ -42,6 +42,8 @@ pacman -S iwd ranger grub neovim sudo efibootmgr linux-headers
 
 systemctl enable iwd.service
 
+sed -i 's/^# %wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/' /etc/sudoers
+
 useradd -m ${_USERNAME}
 passwd ${_USERNAME}
 
